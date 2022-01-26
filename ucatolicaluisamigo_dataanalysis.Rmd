@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(tidygraph)
+library(igraph)
 ```
 
 
@@ -30,10 +31,44 @@ papers |> glimpse()
 
 # Academic social network
 
+There is a mistake creating the ASN, there are researchers that not add the co-authors. For example, id = 1 has one author but the paper presents 3 (http://publicaciones.unaula.edu.co/index.php/VisionContable/article/view/1288). We will work with this data, and later, we will organize this issue. 
+
 ```{r}
-papers |> 
+authors_sep <-  papers |> 
   select(id, autores) |> 
   separate_rows(autores, sep = ", ")
 ```
 
+```{r}
+authors_isolated <- 
+  authors_sep |> 
+  count(id) |> 
+  filter(n == 1) |> 
+  select(id) |> 
+  pull()
+
+authors_ASN <- 
+  authors_sep |> 
+  filter(!(id %in% authors_isolated))
+
+id_list <- authors_ASN |> 
+  select(id) |> 
+  pull()
+
+authors_edgelist <- tibble()
+
+for (i in id_list) {
+  df_1 = authors_ASN |> filter(id == i)
+  df_2 = combn(df_1 |> select(autores) |> pull(), 2, simplify = FALSE)
+  df_3 = data.frame(t(data.frame(df_2)), i)
+  colnames(df_3) = c("Source", "Target", "id")
+  authors_edgelist = authors_edgelist |> bind_rows(df_3)
+  
+}
+
+
+authors_graph <- 
+  graph_from_data_frame(authors_edgelist,directed = FALSE)
+  
+```
 
