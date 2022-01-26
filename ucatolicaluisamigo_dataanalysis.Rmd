@@ -1,0 +1,39 @@
+---
+title: "Data analysis Ucatolica Luis Amigo production"
+author: "Sebastian Robledo"
+date: "1/25/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Creating the environment
+
+```{r}
+library(tidyverse)
+library(tidygraph)
+```
+
+
+# Getting data 
+
+```{r}
+papers <- 
+  read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1924642330") |> 
+  filter(ano > 2014)
+
+papers |> glimpse()
+```
+
+
+# Academic social network
+
+```{r}
+papers |> 
+  select(id, autores) |> 
+  separate_rows(autores, sep = ", ")
+```
+
+
