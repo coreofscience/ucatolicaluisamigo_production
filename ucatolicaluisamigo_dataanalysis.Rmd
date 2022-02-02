@@ -2,44 +2,45 @@
 title: "Data analysis Ucatolica Luis Amigo production"
 author: "Sebastian Robledo"
 date: "1/25/2022"
-output: html_document
+output: 
+  html_document:
+            toc: TRUE
+            toc_float: TRUE
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Creating the environment
 
-```{r}
+```{r message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
 library(tidygraph)
 library(igraph)
+library(DT)
 ```
 
 
-# Getting data 
-
-```{r}
+```{r message=FALSE, warning=FALSE, echo=FALSE}
 papers <- 
   read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1924642330") |> 
   filter(ano > 2014)
 
-papers |> glimpse()
+researchers <- 
+  read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1531675683")
 ```
-
 
 # Academic social network
 
 There is a mistake creating the ASN, there are researchers that not add the co-authors. For example, id = 1 has one author but the paper presents 3 (http://publicaciones.unaula.edu.co/index.php/VisionContable/article/view/1288). We will work with this data, and later, we will organize this issue. 
 
-```{r}
+```{r, echo=FALSE}
 authors_sep <-  papers |> 
   select(id, autores) |> 
   separate_rows(autores, sep = ", ")
 ```
 
-```{r}
+```{r, echo=FALSE}
 authors_isolated <- 
   authors_sep |> 
   count(id) |> 
@@ -69,6 +70,107 @@ for (i in id_list) {
 
 authors_graph <- 
   graph_from_data_frame(authors_edgelist,directed = FALSE)
-  
+
+```
+
+# Most productive Researchers
+
+This analyses is between 2016 and 2021. We want to see quality 
+
+```{r, echo=FALSE}
+researchers_1 <-  
+  researchers |> 
+  select(integrantes, grupo)
+
+
+papers_1 <- # We need to split autores from papers
+  papers |> 
+  select(grupo,
+         categoria_revista, 
+         SJR_Q , 
+         ano, 
+         autores) |> 
+  separate_rows(autores, sep = ", ") |>  # Separate researchers 
+  select(grupo,
+         integrantes = autores, 
+         ano, 
+         categoria_revista, 
+         SJR_Q)
+```
+
+
+### Publindex production
+
+```{r, echo=FALSE}
+paper_publindex <- 
+  researchers_1 |> 
+  left_join(papers_1, by = c("integrantes" = "integrantes", 
+                             "grupo" = "grupo")) |> 
+  select(integrantes,
+         ano, 
+         categoria_revista) |> 
+  group_by(integrantes, 
+           ano) |> 
+  count(categoria_revista) |> 
+  pivot_wider(names_from = categoria_revista, 
+              values_from = n) |> 
+  replace_na(list(A1 = 0, 
+                  A2 = 0, 
+                  C = 0, 
+                  "Sin categoria" = 0, 
+                  B = 0)) |> 
+  select(integrantes, ano, A1, A2, B, C, "Sin categoria") |> 
+  arrange(desc(A1))
+
+paper_publindex |> 
+  DT::datatable(class = "cell-border stripe", 
+                rownames = F, 
+                filter = "top", 
+                editable = TRUE, 
+                extensions = "Buttons", 
+                options = list(dom = "Bfrtip",
+                               buttons = c("copy",
+                                           "csv",
+                                           "excel", 
+                                           "pdf", 
+                                           "print")))
+```
+
+### Scimago production
+
+```{r, echo=FALSE}
+paper_scimago <- 
+researchers_1 |> 
+left_join(papers_1, by = c("integrantes" = "integrantes", 
+"grupo" = "grupo")) |> 
+select(integrantes,
+ano, 
+SJR_Q) |> 
+group_by(integrantes, 
+ano) |> 
+count(SJR_Q) |>
+na.omit() |> 
+pivot_wider(names_from = SJR_Q, 
+values_from = n) |> 
+replace_na(list(Q1 = 0, 
+Q2 = 0, 
+Q3 = 0, 
+"Sin categoria" = 0, 
+Q4 = 0)) |> 
+select(integrantes, ano, Q1, Q2, Q3, Q4, "Sin categoria") |> 
+arrange(desc(Q1))
+
+paper_scimago |> 
+DT::datatable(class = "cell-border stripe", 
+rownames = F, 
+filter = "top", 
+editable = TRUE, 
+extensions = "Buttons", 
+options = list(dom = "Bfrtip",
+buttons = c("copy",
+"csv",
+"excel", 
+"pdf", 
+"print")))
 ```
 
