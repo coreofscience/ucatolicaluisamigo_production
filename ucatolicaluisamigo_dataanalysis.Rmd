@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r message=FALSE, warning=FALSE, echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(tidygraph)
 library(igraph)
@@ -100,9 +100,9 @@ authors_graph_tbl_ucla_gc <-
   activate(nodes) |> 
   mutate(components = group_components(type = "weak")) |> 
   filter(components == 1) 
-  # ggraph(layout = "kk") +
-  # geom_edge_link() +
-  # geom_node_point()
+# ggraph(layout = "kk") +
+# geom_edge_link() +
+# geom_node_point()
 ```
 
 ```{r, echo=FALSE}
@@ -128,8 +128,37 @@ visNetwork(nodes = nodes, edges = edges, height = "500px") |>
   visInteraction(navigationButtons = TRUE, multiselect = TRUE)
 ```
 
+Buscamos los investigadores más populares de acuerdo a la cantidad de conexiones que han generado.
 
-# Most productive Researchers
+De acuerdo a los datos presentados en la tabla, la investigadora con más co-autores es Carmen Ysabel Martinez de Merino. 
+
+```{r, echo=FALSE}
+authors_graph_tbl_ucla_gc |> 
+  activate(nodes) |> 
+  mutate(degree = centrality_degree(), 
+         betweenness = round(centrality_betweenness(), 
+                             digits = 2)) |>
+  arrange(desc(degree)) |> 
+  data.frame() |> 
+  select(Investigador = name,
+         grupo,
+         Grado = degree,
+         "Intermediación" = betweenness,
+         Cluster = components) |>
+  DT::datatable(class = "cell-border stripe", 
+                rownames = F, 
+                filter = "top", 
+                editable = FALSE, 
+                extensions = "Buttons", 
+                options = list(dom = "Bfrtip",
+                               buttons = c("copy",
+                                           "csv",
+                                           "excel", 
+                                           "pdf", 
+                                           "print")))
+```
+
+# Investigadores más productivos
 
 This analyses is between 2016 and 2021. We want to see quality
 
@@ -181,7 +210,7 @@ paper_publindex |>
   DT::datatable(class = "cell-border stripe", 
                 rownames = F, 
                 filter = "top", 
-                editable = TRUE, 
+                editable = FALSE, 
                 extensions = "Buttons", 
                 options = list(dom = "Bfrtip",
                                buttons = c("copy",
@@ -195,36 +224,36 @@ paper_publindex |>
 
 ```{r, echo=FALSE}
 paper_scimago <- 
-researchers_1 |> 
-left_join(papers_1, by = c("integrantes" = "integrantes", 
-"grupo" = "grupo")) |> 
-select(integrantes,
-ano, 
-SJR_Q) |> 
-group_by(integrantes, 
-ano) |> 
-count(SJR_Q) |>
-na.omit() |> 
-pivot_wider(names_from = SJR_Q, 
-values_from = n) |> 
-replace_na(list(Q1 = 0, 
-Q2 = 0, 
-Q3 = 0, 
-"Sin categoria" = 0, 
-Q4 = 0)) |> 
-select(integrantes, ano, Q1, Q2, Q3, Q4, "Sin categoria") |> 
-arrange(desc(Q1))
+  researchers_1 |> 
+  left_join(papers_1, by = c("integrantes" = "integrantes", 
+                             "grupo" = "grupo")) |> 
+  select(integrantes,
+         ano, 
+         SJR_Q) |> 
+  group_by(integrantes, 
+           ano) |> 
+  count(SJR_Q) |>
+  na.omit() |> 
+  pivot_wider(names_from = SJR_Q, 
+              values_from = n) |> 
+  replace_na(list(Q1 = 0, 
+                  Q2 = 0, 
+                  Q3 = 0, 
+                  "Sin categoria" = 0, 
+                  Q4 = 0)) |> 
+  select(integrantes, ano, Q1, Q2, Q3, Q4, "Sin categoria") |> 
+  arrange(desc(Q1))
 
 paper_scimago |> 
-DT::datatable(class = "cell-border stripe", 
-rownames = F, 
-filter = "top", 
-editable = TRUE, 
-extensions = "Buttons", 
-options = list(dom = "Bfrtip",
-buttons = c("copy",
-"csv",
-"excel", 
-"pdf", 
-"print")))
+  DT::datatable(class = "cell-border stripe", 
+                rownames = F, 
+                filter = "top", 
+                editable = FALSE, 
+                extensions = "Buttons", 
+                options = list(dom = "Bfrtip",
+                               buttons = c("copy",
+                                           "csv",
+                                           "excel", 
+                                           "pdf", 
+                                           "print")))
 ```
