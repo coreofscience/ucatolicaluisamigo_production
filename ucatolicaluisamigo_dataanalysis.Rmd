@@ -1,5 +1,5 @@
 ---
-title: "Data analysis Ucatolica Luis Amigo production"
+title: "Análisis de la Producción científica de la UCLA"
 author: "Sebastian Robledo"
 date: "1/25/2022"
 output: 
@@ -12,14 +12,14 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
 library(tidygraph)
 library(igraph)
 library(DT)
+library(visNetwork)
+library(ggraph)
 ```
-
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 papers <- 
@@ -30,9 +30,9 @@ researchers <-
   read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1531675683")
 ```
 
-# Academic social network
+# Red Social Académica
 
-There is a mistake creating the ASN, there are researchers that not add the co-authors. For example, id = 1 has one author but the paper presents 3 (http://publicaciones.unaula.edu.co/index.php/VisionContable/article/view/1288). We will work with this data, and later, we will organize this issue. 
+Creamos la red social y revisamos sus características
 
 ```{r, echo=FALSE}
 authors_sep <-  papers |> 
@@ -67,15 +67,71 @@ for (i in id_list) {
   
 }
 
-
-authors_graph <- 
-  graph_from_data_frame(authors_edgelist,directed = FALSE)
-
+authors_graph_tbl <- 
+  graph_from_data_frame(authors_edgelist,directed = FALSE) |> 
+  tidygraph::as_tbl_graph()
 ```
+
+```{r, echo=FALSE}
+researchers_ucla <- 
+  researchers |> 
+  select(integrantes, grupo) |> 
+  mutate(universidad = "ucla")
+
+authors_graph_tbl_1 <- 
+  authors_graph_tbl |> 
+  activate(nodes) |> 
+  left_join(researchers_ucla, 
+            by = c("name" = "integrantes")) |>
+  mutate(universidad = if_else(is.na(universidad), "otra", universidad),
+         grupo = if_else(is.na(grupo), "Sin_grupo", grupo)) 
+
+authors_graph_tbl_ucla <- 
+  authors_graph_tbl_1 |> 
+  activate(nodes) |> 
+  filter(universidad == "ucla")
+```
+
+Visualización de la red social académica entre los profesores de la U. Solo los profesores que están conectados.
+
+```{r, echo=FALSE}
+authors_graph_tbl_ucla_gc <- 
+  authors_graph_tbl_ucla |> 
+  activate(nodes) |> 
+  mutate(components = group_components(type = "weak")) |> 
+  filter(components == 1) 
+  # ggraph(layout = "kk") +
+  # geom_edge_link() +
+  # geom_node_point()
+```
+
+```{r, echo=FALSE}
+nodes <- 
+  authors_graph_tbl_ucla_gc |> 
+  activate(nodes) |>
+  mutate(id = row_number()) |> 
+  data.frame() |> 
+  rename(label = name)
+
+edges <- 
+  authors_graph_tbl_ucla_gc |> 
+  activate(edges) |> 
+  data.frame() |> 
+  group_by(from, to) |> 
+  count(id) |> 
+  select(-id) |> 
+  distinct()
+
+visNetwork(nodes = nodes, edges = edges, height = "500px") |> 
+  visIgraphLayout(layout = "layout_with_fr") |> 
+  visOptions(highlightNearest = TRUE, selectedBy = "label" ) |> 
+  visInteraction(navigationButtons = TRUE, multiselect = TRUE)
+```
+
 
 # Most productive Researchers
 
-This analyses is between 2016 and 2021. We want to see quality 
+This analyses is between 2016 and 2021. We want to see quality
 
 ```{r, echo=FALSE}
 researchers_1 <-  
@@ -97,7 +153,6 @@ papers_1 <- # We need to split autores from papers
          categoria_revista, 
          SJR_Q)
 ```
-
 
 ### Publindex production
 
@@ -173,4 +228,3 @@ buttons = c("copy",
 "pdf", 
 "print")))
 ```
-
