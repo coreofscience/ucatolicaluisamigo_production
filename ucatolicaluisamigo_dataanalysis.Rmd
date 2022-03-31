@@ -6,6 +6,8 @@ output:
   html_document:
             toc: TRUE
             toc_float: TRUE
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -27,7 +29,8 @@ papers <-
   filter(ano > 2014)
 
 researchers <- 
-  read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1531675683")
+  read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1531675683") |> 
+  mutate(universidad = "ucla")
 ```
 
 # Red Social Académica
@@ -35,105 +38,110 @@ researchers <-
 Creamos la red social y revisamos sus características
 
 ```{r, echo=FALSE}
-authors_sep <-  papers |> 
+authors_sep <-  
+  papers |> 
   select(id, autores) |> 
   separate_rows(autores, sep = ", ")
 ```
 
 ```{r, echo=FALSE}
-authors_isolated <- 
-  authors_sep |> 
-  count(id) |> 
-  filter(n == 1) |> 
-  select(id) |> 
-  pull()
-
-authors_ASN <- 
-  authors_sep |> 
-  filter(!(id %in% authors_isolated))
-
-id_list <- authors_ASN |> 
-  select(id) |> 
-  pull()
-
-authors_edgelist <- tibble()
-
-for (i in id_list) {
-  df_1 = authors_ASN |> filter(id == i)
-  df_2 = combn(df_1 |> select(autores) |> pull(), 2, simplify = FALSE)
-  df_3 = data.frame(t(data.frame(df_2)), i)
-  colnames(df_3) = c("Source", "Target", "id")
-  authors_edgelist = authors_edgelist |> bind_rows(df_3)
-  
-}
-
 authors_graph_tbl <- 
-  graph_from_data_frame(authors_edgelist,directed = FALSE) |> 
-  tidygraph::as_tbl_graph()
+  papers |> 
+  select(id, autores) |> 
+  separate_rows(autores, sep = ", ") |> 
+  group_by(id) |> 
+  filter(n() > 1) |> 
+  expand(from = autores, to = autores) |> 
+  filter(from != to) |> 
+  ungroup() |> 
+  select(-id) |> 
+  graph_from_data_frame(directed = FALSE) |> 
+  as_tbl_graph() |> 
+  convert(to_simple) |> 
+  activate(nodes) |> 
+  left_join(researchers |> 
+              select(integrantes, universidad, grupo), 
+            by = c("name" = "integrantes")) |>
+  mutate(universidad = if_else(is.na(universidad), "otra", universidad),
+         grupo = if_else(is.na(grupo), "Sin_grupo", grupo),
+         components = group_components(type = "weak")) |> 
+  filter(components == 1)
 ```
 
 ```{r, echo=FALSE}
-researchers_ucla <- 
-  researchers |> 
-  select(integrantes, grupo) |> 
-  mutate(universidad = "ucla")
-
-authors_graph_tbl_1 <- 
+nodes<- 
   authors_graph_tbl |> 
   activate(nodes) |> 
-  left_join(researchers_ucla, 
-            by = c("name" = "integrantes")) |>
-  mutate(universidad = if_else(is.na(universidad), "otra", universidad),
-         grupo = if_else(is.na(grupo), "Sin_grupo", grupo)) 
+  as_tibble() |> 
+  rename(author = name) |> 
+  rownames_to_column("name")
 
-authors_graph_tbl_ucla <- 
-  authors_graph_tbl_1 |> 
-  activate(nodes) |> 
-  filter(universidad == "ucla")
+edges <- 
+  authors_graph_tbl |> 
+  activate(edges) |> 
+  as_tibble()
+
+graph_from_data_frame(d = edges, 
+                      directed = FALSE, 
+                      vertices = nodes) |> 
+  write_graph("output/academic_social_network.graphml", 
+              "graphml")
+
 ```
 
 Visualización de la red social académica entre los profesores de la U. Solo los profesores que están conectados.
 
-```{r, echo=FALSE}
-authors_graph_tbl_ucla_gc <- 
-  authors_graph_tbl_ucla |> 
-  activate(nodes) |> 
-  mutate(components = group_components(type = "weak")) |> 
-  filter(components == 1) 
-# ggraph(layout = "kk") +
-# geom_edge_link() +
-# geom_node_point()
-```
 
 ```{r, echo=FALSE}
 nodes <- 
-  authors_graph_tbl_ucla_gc |> 
+  authors_graph_tbl |> 
   activate(nodes) |>
   mutate(id = row_number()) |> 
   data.frame() |> 
-  rename(label = name)
+  rename(label = name) |> 
+  select(id, label, universidad) |> 
+  mutate(color = if_else(universidad == "ucla", "blue", "red"))
 
 edges <- 
-  authors_graph_tbl_ucla_gc |> 
+  authors_graph_tbl |> 
   activate(edges) |> 
   data.frame() |> 
-  group_by(from, to) |> 
-  count(id) |> 
-  select(-id) |> 
-  distinct()
+  select(from, to) 
 
-visNetwork(nodes = nodes, edges = edges, height = "500px") |> 
+visNetwork(nodes = nodes, 
+           edges = edges, 
+           height = "500px") |>
   visIgraphLayout(layout = "layout_with_fr") |> 
   visOptions(highlightNearest = TRUE, selectedBy = "label" ) |> 
   visInteraction(navigationButtons = TRUE, multiselect = TRUE)
 ```
+
+Solo profesores de la Luis Amigó
+
+```{r}
+nodes_luis <- 
+  nodes |> 
+  filter(universidad == "ucla")
+
+visNetwork(nodes = nodes_luis, 
+           edges = edges, 
+           height = "500px") |>
+  visIgraphLayout(layout = "layout_with_fr") |> 
+  visOptions(highlightNearest = TRUE, selectedBy = "label" ) |> 
+  visInteraction(navigationButtons = TRUE, multiselect = TRUE)
+```
+
+
+### Características globales
+
+### Características locales
 
 Buscamos los investigadores más populares de acuerdo a la cantidad de conexiones que han generado.
 
 De acuerdo a los datos presentados en la tabla, la investigadora con más co-autores es Carmen Ysabel Martinez de Merino. 
 
 ```{r, echo=FALSE}
-authors_graph_tbl_ucla_gc |> 
+authors_graph_tbl |> 
   activate(nodes) |> 
   mutate(degree = centrality_degree(), 
          betweenness = round(centrality_betweenness(), 
@@ -181,11 +189,7 @@ papers_1 <- # We need to split autores from papers
          ano, 
          categoria_revista, 
          SJR_Q)
-```
 
-### Publindex production
-
-```{r, echo=FALSE}
 paper_publindex <- 
   researchers_1 |> 
   left_join(papers_1, by = c("integrantes" = "integrantes", 
@@ -206,23 +210,6 @@ paper_publindex <-
   select(integrantes, ano, A1, A2, B, C, "Sin categoria") |> 
   arrange(desc(A1))
 
-paper_publindex |> 
-  DT::datatable(class = "cell-border stripe", 
-                rownames = F, 
-                filter = "top", 
-                editable = FALSE, 
-                extensions = "Buttons", 
-                options = list(dom = "Bfrtip",
-                               buttons = c("copy",
-                                           "csv",
-                                           "excel", 
-                                           "pdf", 
-                                           "print")))
-```
-
-### Scimago production
-
-```{r, echo=FALSE}
 paper_scimago <- 
   researchers_1 |> 
   left_join(papers_1, by = c("integrantes" = "integrantes", 
@@ -243,7 +230,98 @@ paper_scimago <-
                   Q4 = 0)) |> 
   select(integrantes, ano, Q1, Q2, Q3, Q4, "Sin categoria") |> 
   arrange(desc(Q1))
+```
 
+## Producción general
+
+Producción top de los 10 mejores investigadores
+
+```{r, echo=FALSE}
+q1_top <- 
+  paper_scimago |> 
+  filter(ano >= 2016) |> 
+  group_by(integrantes) |> 
+  summarise(Q1_total = sum(Q1)) |> 
+  filter(Q1_total != 0) |> 
+  arrange(desc(Q1_total))
+
+q2_top <- 
+  paper_scimago |> 
+  filter(ano >= 2016) |> 
+  group_by(integrantes) |> 
+  summarise(Q2_total = sum(Q2)) |> 
+  filter(Q2_total != 0) |> 
+  arrange(desc(Q2_total))
+
+a1_top <- 
+  paper_publindex |> 
+  filter(ano >= 1016) |> 
+  group_by(integrantes) |> 
+  summarise(A1_total = sum(A1)) |> 
+  filter(A1_total != 0) |> 
+  arrange(desc(A1_total))
+
+a2_top <- 
+  paper_publindex |> 
+  filter(ano >= 2016) |> 
+  group_by(integrantes) |> 
+  summarise(A2_total = sum(A2)) |> 
+  filter(A2_total != 0) |> 
+  arrange(desc(A2_total))
+
+# Merging all datasets
+
+top_researchers <- 
+  q1_top |> 
+  left_join(q2_top, by = "integrantes") |> 
+  left_join(a1_top, by = "integrantes") |> 
+  left_join(a2_top, by = "integrantes") |> 
+  rename(Q1 = Q1_total,
+         Q2 = Q2_total,
+         A1 = A1_total,
+         A2 = A2_total) |> 
+  replace_na(replace = list(Q1 = 0,
+                            Q2 = 0,
+                            A1 = 0,
+                            A2 = 0))
+
+top_researchers |> 
+    DT::datatable(class = "cell-border stripe", 
+                rownames = F, 
+                filter = "top", 
+                editable = FALSE, 
+                extensions = "Buttons", 
+                options = list(dom = "Bfrtip",
+                               buttons = c("copy",
+                                           "csv",
+                                           "excel", 
+                                           "pdf", 
+                                           "print")))
+
+```
+
+
+## Publindex production
+
+```{r, echo=FALSE}
+paper_publindex |> 
+  DT::datatable(class = "cell-border stripe", 
+                rownames = F, 
+                filter = "top", 
+                editable = FALSE, 
+                extensions = "Buttons", 
+                options = list(dom = "Bfrtip",
+                               buttons = c("copy",
+                                           "csv",
+                                           "excel", 
+                                           "pdf", 
+                                           "print")))
+```
+
+## Scimago production
+
+Tabla
+```{r, echo=FALSE}
 paper_scimago |> 
   DT::datatable(class = "cell-border stripe", 
                 rownames = F, 
@@ -257,3 +335,5 @@ paper_scimago |>
                                            "pdf", 
                                            "print")))
 ```
+
+
