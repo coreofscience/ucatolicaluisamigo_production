@@ -21,12 +21,14 @@ library(igraph)
 library(DT)
 library(visNetwork)
 library(ggraph)
+library(rcrossref)
+library(purrr)
 ```
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 papers <- 
   read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1924642330") |> 
-  filter(ano > 2014)
+  filter(ano > 2014) 
 
 researchers <- 
   read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1531675683") |> 
