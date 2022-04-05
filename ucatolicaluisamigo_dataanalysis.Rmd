@@ -16,6 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
+library(tidymodels)
 library(tidygraph)
 library(igraph)
 library(DT)
@@ -23,6 +24,9 @@ library(visNetwork)
 library(ggraph)
 library(rcrossref)
 library(purrr)
+library(vip)
+library(lubridate)
+library(yardstick)
 ```
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
@@ -338,4 +342,114 @@ paper_scimago |>
                                            "print")))
 ```
 
+# Análisis inferencial
+
+```{r}
+researcher_model_1 <- 
+  researchers |> 
+  select(articulos, inicio_vinculacion) |> 
+  separate_rows(inicio_vinculacion, sep = "; ") |>
+  separate_rows(articulos, sep = "; ") |> 
+  mutate(inicio_vinculacion = ymd(inicio_vinculacion),
+         dias_vinculados = today() - inicio_vinculacion) |> 
+  select(-inicio_vinculacion) |> 
+  mutate(articulos = as.numeric(articulos))
+```
+
+Linear model
+
+```{r}
+model_1 <- 
+  lm(articulos ~ dias_vinculados, researcher_model_1)
+
+summary(model_1)
+```
+
+tidymodel
+
+```{r}
+researchres_split <- 
+  initial_split(researcher_model_1, 
+                prop = 0.75, 
+                strata = articulos)
+
+researchers_training <- 
+  researchres_split |> 
+  training()
+
+researchers_testing <- 
+  researchres_split |> 
+  testing()
+```
+
+```{r}
+lm_model <- linear_reg() |> 
+  set_engine("lm") |> 
+  set_mode("regression")
+
+lm_fit <- lm_model |> 
+  fit(articulos ~ dias_vinculados, researchers_training)
+```
+
+
+```{r}
+tidy(lm_fit)
+```
+
+Making predictions 
+
+```{r}
+researchers_predictions <- 
+  lm_fit |> 
+  predict(new_data = researchers_testing)
+```
+
+
+
+```{r}
+researchers_test_results <- 
+  researchers_testing |>
+  select(articulos, dias_vinculados) |> 
+  bind_cols(researchers_predictions)
+```
+
+Evaluating the model performance
+
+```{r}
+researchers_test_results |> 
+  rmse(truth = articulos, estimate = .pred)
+```
+
+r2 metric
+
+```{r}
+researchers_test_results |> 
+  rsq(truth = articulos, estimate = .pred)
+```
+
+```{r}
+ggplot(researchers_test_results, aes(x = articulos, y = .pred)) +
+  geom_point(alpha = 0.5) + 
+  geom_abline(color = 'blue', linetype = 2) +
+  coord_obs_pred()  +
+  labs(x = 'articulos actuales', y = 'Predicted articles')
+```
+
+
+```{r}
+lm_last_fit <- 
+  lm_model |> 
+  last_fit(articulos ~ dias_viculados, 
+           split = researchres_split)
+```
+
+```{r}
+lm_last_fit |> 
+  collect_metrics()
+```
+
+```{r}
+lm_last_fit |> 
+  collect_predictions()
+```
 
