@@ -27,6 +27,10 @@ library(purrr)
 library(vip)
 library(lubridate)
 library(yardstick)
+library(psych)
+library(bestNormalize)
+library(performance)
+library(report)
 ```
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
@@ -292,7 +296,7 @@ top_researchers <-
                             A2 = 0))
 
 top_researchers |> 
-    DT::datatable(class = "cell-border stripe", 
+  DT::datatable(class = "cell-border stripe", 
                 rownames = F, 
                 filter = "top", 
                 editable = FALSE, 
@@ -344,6 +348,10 @@ paper_scimago |>
 
 # Análisis inferencial
 
+## Regressión lineal 
+
+### Normality
+
 ```{r}
 researcher_model_1 <- 
   researchers |> 
@@ -353,23 +361,97 @@ researcher_model_1 <-
   mutate(inicio_vinculacion = ymd(inicio_vinculacion),
          dias_vinculados = today() - inicio_vinculacion) |> 
   select(-inicio_vinculacion) |> 
-  mutate(articulos = as.numeric(articulos))
+  mutate(articulos = as.numeric(articulos),
+         dias_vinculados = as.numeric(dias_vinculados))
 ```
 
-Linear model
+
+Checking histograms
+
+```{r}
+par(mfrow = c(1,2))
+researcher_model_1 |> 
+  ggplot(aes(x = articulos)) +
+  geom_histogram()
+researcher_model_1 |> 
+  ggplot(aes(x = dias_vinculados)) +
+  geom_histogram()
+```
+
+
+Checking Q-Q plot
+
+```{r}
+plot.new()
+par(mfrow = c(1,2))
+
+qqnorm(researcher_model_1$articulos, main='Normal')
+qqline(researcher_model_1$articulos)
+
+qqnorm(researcher_model_1$dias_vinculados, main='Non-normal')
+qqline(researcher_model_1$dias_vinculados)
+```
+
+Shapiro-wilk test
+
+```{r}
+shapiro.test(researcher_model_1$articulos)
+shapiro.test(researcher_model_1$dias_vinculados)
+```
+
+p-value less than 0.05 - not normally distributed
+
+We need to transform the data
+
+### Transformation
+
+```{r}
+articulos_bestnor <- 
+  bestNormalize(researcher_model_1$articulos)
+
+articulos_trans <- 
+  predict(articulos_bestnor, 
+          newdata = articulos_bestnor$x.t, 
+          inverse = TRUE)
+
+dias_vinculados_bestnor <- 
+  bestNormalize(researcher_model_1$dias_vinculados)
+
+dias_vinculados_trans <- 
+  predict(dias_vinculados_bestnor, newdata = dias_vinculados_bestnor$x.t, 
+          inverse = TRUE)
+researcher_trans <- 
+  tibble(articulos = articulos_trans,
+         dias_vinculados = dias_vinculados_trans)
+```
+
+
+### Linear model - Traditional
 
 ```{r}
 model_1 <- 
-  lm(articulos ~ dias_vinculados, researcher_model_1)
+  lm(articulos ~ dias_vinculados, researcher_trans)
 
 summary(model_1)
 ```
 
-tidymodel
+Checking supositions 
+
+```{r}
+check_model(model_1)
+```
+
+Report
+
+```{r}
+report(model_1)
+```
+
+### Tidymodel
 
 ```{r}
 researchres_split <- 
-  initial_split(researcher_model_1, 
+  initial_split(researcher_trans, 
                 prop = 0.75, 
                 strata = articulos)
 
@@ -383,12 +465,15 @@ researchers_testing <-
 ```
 
 ```{r}
-lm_model <- linear_reg() |> 
+lm_model <- 
+  linear_reg() |> 
   set_engine("lm") |> 
   set_mode("regression")
 
-lm_fit <- lm_model |> 
-  fit(articulos ~ dias_vinculados, researchers_training)
+lm_fit <- 
+  lm_model |> 
+  fit(articulos ~ dias_vinculados, 
+      researchers_training)
 ```
 
 
@@ -417,14 +502,16 @@ Evaluating the model performance
 
 ```{r}
 researchers_test_results |> 
-  rmse(truth = articulos, estimate = .pred)
+  yardstick::rmse(truth = articulos,
+                  estimate = .pred)
 ```
 
 r2 metric
 
 ```{r}
 researchers_test_results |> 
-  rsq(truth = articulos, estimate = .pred)
+  rsq(truth = articulos, 
+      estimate = .pred)
 ```
 
 ```{r}
@@ -451,5 +538,140 @@ lm_last_fit |>
 ```{r}
 lm_last_fit |> 
   collect_predictions()
+```
+
+## Logistic regression
+
+We need to transform the values of articles variable
+
+```{r}
+researcher_model_2 <- 
+  researcher_model_1 |> 
+  mutate(articulos_bin = if_else(articulos <= 3, 
+                                 "low", 
+                                 "high"),
+         articulos_bin = as_factor(articulos_bin)) |> 
+  select(-articulos)
+```
+
+Data resampling 
+
+```{r}
+researcher_bin_split <- 
+  initial_split(researcher_model_2,
+                prop = 0.75, 
+                strata = "articulos_bin")
+
+researcher_bin_training <- 
+  researcher_bin_split |> 
+  training()
+
+researcher_bin_test <- 
+  researcher_bin_split |> 
+  testing()
+```
+
+Logistic Regression model
+
+```{r}
+logistic_model <- 
+  logistic_reg() |> 
+  set_engine("glm") |> 
+  set_mode("classification")
+```
+
+Model fitting
+
+```{r}
+logistic_fit <- 
+  logistic_model |> 
+  parsnip::fit(articulos_bin ~ dias_vinculados, 
+               data = researcher_bin_training)
+```
+
+Predicting outcome categories
+
+```{r}
+class_preds <- 
+  logistic_fit |> 
+  predict(new_data = researcher_bin_test,
+          type = "class")
+```
+
+Estimated probabilities 
+
+```{r}
+prob_preds <- 
+  logistic_fit |> 
+  predict(new_data = researcher_bin_test,
+          type = "prob")
+```
+
+Combining results 
+
+```{r}
+researcher_bin_results <- 
+  researcher_bin_test |> 
+  bind_cols(class_preds, prob_preds)
+```
+
+Assessing model fit
+
+```{r}
+levels(researcher_model_2$articulos_bin)
+```
+
+Confusion matrix
+
+```{r}
+conf_mat(researcher_bin_results, 
+         truth = articulos_bin, 
+         estimate = .pred_class)
+```
+
+62.5% correctly classified
+
+Classification Accuracy 
+
+```{r}
+accuracy(researcher_bin_results, 
+         truth = articulos_bin, 
+         estimate = .pred_class)
+```
+
+Sensitivity
+proportion of all positive cases that were correctly classified
+Of reserachers who had high productivity, what proportion did our model predict correctly? 
+
+```{r}
+sens(researcher_bin_results, 
+     truth = articulos_bin, 
+     estimate = .pred_class)
+```
+
+Specificity 
+
+```{r}
+spec(researcher_bin_results, 
+     truth = articulos_bin, 
+     estimate = .pred_class)
+```
+
+Creating a metric set 
+
+```{r}
+custom_metrics <- 
+  metric_set(accuracy, sens, spec)
+
+custom_metrics(researcher_bin_results, 
+               truth = articulos_bin,
+               estimate = .pred_class)
+```
+
+```{r}
+conf_mat(researcher_bin_results, 
+         truth = articulos_bin,
+         estimate = .pred_class) |> 
+  summary()
 ```
 
