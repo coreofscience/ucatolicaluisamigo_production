@@ -101,7 +101,6 @@ graph_from_data_frame(d = edges,
 
 Visualización de la red social académica entre los profesores de la U. Solo los profesores que están conectados.
 
-
 ```{r, echo=FALSE}
 nodes <- 
   authors_graph_tbl |> 
@@ -141,14 +140,13 @@ visNetwork(nodes = nodes_luis,
   visInteraction(navigationButtons = TRUE, multiselect = TRUE)
 ```
 
-
 ### Características globales
 
 ### Características locales
 
 Buscamos los investigadores más populares de acuerdo a la cantidad de conexiones que han generado.
 
-De acuerdo a los datos presentados en la tabla, la investigadora con más co-autores es Carmen Ysabel Martinez de Merino. 
+De acuerdo a los datos presentados en la tabla, la investigadora con más co-autores es Carmen Ysabel Martinez de Merino.
 
 ```{r, echo=FALSE}
 authors_graph_tbl |> 
@@ -310,7 +308,6 @@ top_researchers |>
 
 ```
 
-
 ## Publindex production
 
 ```{r, echo=FALSE}
@@ -331,6 +328,7 @@ paper_publindex |>
 ## Scimago production
 
 Tabla
+
 ```{r, echo=FALSE}
 paper_scimago |> 
   DT::datatable(class = "cell-border stripe", 
@@ -348,7 +346,7 @@ paper_scimago |>
 
 # Análisis inferencial
 
-## Regressión lineal 
+## Regressión lineal
 
 ### Normality
 
@@ -365,7 +363,6 @@ researcher_model_1 <-
          dias_vinculados = as.numeric(dias_vinculados))
 ```
 
-
 Checking histograms
 
 ```{r}
@@ -377,7 +374,6 @@ researcher_model_1 |>
   ggplot(aes(x = dias_vinculados)) +
   geom_histogram()
 ```
-
 
 Checking Q-Q plot
 
@@ -425,7 +421,6 @@ researcher_trans <-
          dias_vinculados = dias_vinculados_trans)
 ```
 
-
 ### Linear model - Traditional
 
 ```{r}
@@ -435,7 +430,7 @@ model_1 <-
 summary(model_1)
 ```
 
-Checking supositions 
+Checking supositions
 
 ```{r}
 check_model(model_1)
@@ -476,20 +471,17 @@ lm_fit <-
       researchers_training)
 ```
 
-
 ```{r}
 tidy(lm_fit)
 ```
 
-Making predictions 
+Making predictions
 
 ```{r}
 researchers_predictions <- 
   lm_fit |> 
   predict(new_data = researchers_testing)
 ```
-
-
 
 ```{r}
 researchers_test_results <- 
@@ -522,7 +514,6 @@ ggplot(researchers_test_results, aes(x = articulos, y = .pred)) +
   labs(x = 'articulos actuales', y = 'Predicted articles')
 ```
 
-
 ```{r}
 lm_last_fit <- 
   lm_model |> 
@@ -554,7 +545,7 @@ researcher_model_2 <-
   select(-articulos)
 ```
 
-Data resampling 
+Data resampling
 
 ```{r}
 researcher_bin_split <- 
@@ -598,7 +589,7 @@ class_preds <-
           type = "class")
 ```
 
-Estimated probabilities 
+Estimated probabilities
 
 ```{r}
 prob_preds <- 
@@ -607,7 +598,7 @@ prob_preds <-
           type = "prob")
 ```
 
-Combining results 
+Combining results
 
 ```{r}
 researcher_bin_results <- 
@@ -631,7 +622,9 @@ conf_mat(researcher_bin_results,
 
 62.5% correctly classified
 
-Classification Accuracy 
+![](confussion%20matrix.png)
+
+### Accuracy
 
 ```{r}
 accuracy(researcher_bin_results, 
@@ -639,9 +632,11 @@ accuracy(researcher_bin_results,
          estimate = .pred_class)
 ```
 
-Sensitivity
-proportion of all positive cases that were correctly classified
-Of reserachers who had high productivity, what proportion did our model predict correctly? 
+![](Accuracy.png)
+
+### Sensitivity
+
+Sensitivity proportion of all positive cases that were correctly classified of reserachers who had high productivity, what proportion did our model predict correctly?
 
 ```{r}
 sens(researcher_bin_results, 
@@ -649,7 +644,9 @@ sens(researcher_bin_results,
      estimate = .pred_class)
 ```
 
-Specificity 
+![](Sensitivity.png)
+
+### Specificity
 
 ```{r}
 spec(researcher_bin_results, 
@@ -657,7 +654,9 @@ spec(researcher_bin_results,
      estimate = .pred_class)
 ```
 
-Creating a metric set 
+![](Specificity.png)
+
+Creating a metric set
 
 ```{r}
 custom_metrics <- 
@@ -675,3 +674,42 @@ conf_mat(researcher_bin_results,
   summary()
 ```
 
+### Visualizing model
+
+Plotting the confusion matrix
+
+```{r}
+conf_mat(researcher_bin_results, 
+         truth = articulos_bin,
+         estimate = .pred_class) |> 
+  autoplot(type = "heatmap")
+```
+
+```{r}
+conf_mat(researcher_bin_results, 
+         truth = articulos_bin,
+         estimate = .pred_class) |> 
+  autoplot(type = "mosaic")
+```
+
+Calculating performance
+
+```{r}
+researcher_bin_results |> 
+  roc_curve(truth = articulos_bin, .pred_high) |> 
+  autoplot()
+```
+
+```{r}
+
+# Load file wos.csv and save it as df
+
+
+```
+
+
+```{r}
+roc_auc(researcher_bin_results, 
+        truth = articulos_bin, 
+        .pred_high)
+```
