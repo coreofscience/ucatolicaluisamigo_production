@@ -31,6 +31,7 @@ library(psych)
 library(bestNormalize)
 library(performance)
 library(report)
+library(plotly)
 ```
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
@@ -41,6 +42,41 @@ papers <-
 researchers <- 
   read_csv("https://docs.google.com/spreadsheets/d/17b_d24WF2dRBedatAqgArWodAaAn6-o0/export?format=csv&gid=1531675683") |> 
   mutate(universidad = "ucla")
+```
+
+#Investigadores en la Universidad
+```{r, echo=FALSE}
+authors_ucla_others <- 
+  papers |> 
+  select(id, autores, ano) |> 
+  separate_rows(autores, sep = ", ") |> 
+  group_by(id) |> 
+  filter(n() > 1) |> 
+  left_join(researchers |> 
+              select(integrantes, universidad, grupo), 
+            by = c("autores" = "integrantes")) |>
+  mutate(universidad = if_else(is.na(universidad), "otra", universidad),
+         grupo = if_else(is.na(grupo), "Sin_grupo", grupo)) |>
+  ungroup() |> 
+  select(-id) |> 
+  group_by(ano) |> 
+  count(universidad, name = "otra") |>
+  mutate(universidad = paste0(otra, collapse = ",")) |> 
+  select(ano, universidad) |> 
+  unique() |> 
+  separate(universidad, into = c("universidad", "otra"), sep = ",") |> 
+  ungroup() |> 
+  transform(ano = as.character(ano),
+            universidad = as.numeric(universidad),
+            otra = as.numeric(otra))
+
+fig <- plot_ly(authors_ucla_others, x = ~ano,y = ~otra, type = 'bar',
+               name ="Invertigador externo") |> 
+  add_trace(y = ~universidad, name="Universidad Luis Amigó") |> 
+  layout(xaxis = list(title="Año"),
+  yaxis = list(title='Investigadores'), barmode = 'group')
+fig
+
 ```
 
 # Red Social Académica
