@@ -44,7 +44,10 @@ researchers <-
   mutate(universidad = "ucla")
 ```
 
-#Investigadores en la Universidad
+# Análisis descriptivo 
+
+## Investigadores en internos y externos
+
 ```{r, echo=FALSE}
 authors_ucla_others <- 
   papers |> 
@@ -78,6 +81,21 @@ fig <- plot_ly(authors_ucla_others, x = ~ano,y = ~otra, type = 'bar',
 fig
 
 ```
+
+## Calidad de producción anual
+
+```{r, echo=FALSE}
+papers |> 
+  select(ano, SJR_Q) |> 
+  group_by(ano, SJR_Q) |> 
+  count() |> 
+  arrange(ano) |> 
+  rename(total = n) |> 
+  ggplot(aes(x = factor(ano), y = total, fill = SJR_Q)) +
+  geom_bar(stat = "identity", 
+           position = "dodge")
+```
+
 
 # Red Social Académica
 
@@ -163,7 +181,7 @@ visNetwork(nodes = nodes,
 
 Solo profesores de la Luis Amigó
 
-```{r}
+```{r, echo=FALSE}
 nodes_luis <- 
   nodes |> 
   filter(universidad == "ucla")
