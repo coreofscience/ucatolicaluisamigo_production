@@ -72,7 +72,7 @@ authors_ucla_others <-
 
 fig <- plot_ly(authors_ucla_others, x = ~ano,y = ~otra, type = 'bar',
                name ="Invertigador externo") |> 
-  add_trace(y = ~universidad, name="Universidad Luis Amigó") |> 
+  add_trace(y = ~universidad, name="Universidad Luis Amigó Test") |> 
   layout(xaxis = list(title="Año"),
   yaxis = list(title='Investigadores'), barmode = 'group')
 fig
