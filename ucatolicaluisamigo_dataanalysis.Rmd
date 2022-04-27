@@ -44,27 +44,9 @@ researchers <-
   mutate(universidad = "ucla")
 ```
 
-# Analisis Grafica Publicaciones Colombianas v.s Externas
+# Análisis descriptivo 
 
-```{r}
-papers |> 
-  select(ano, pais_revista) |> #Seleccionar variables año y pais_revista
-  na.omit() |>
-  mutate(clasificacion = if_else(pais_revista == "Colombia", pais_revista, "Otro")) |> #Crear Variable clasificacion
-  select(ano, clasificacion) |> #ELimina la variable pais_revista 
-  group_by(ano, clasificacion) |> #Agrupa variable x año/clasificacion
-  count() |>  # Contalbilizar publicaciones x año/tipo
-  rename(cantidad = n) |>
-  ggplot(aes(x = ano, y = cantidad, color = clasificacion)) + 
-    geom_line() +
-          labs(title = "Publications", 
-              x = "years",
-              y = "Articles") +
-          theme(plot.title = element_text(hjust = 0.5)) 
-
-```
-
-#Investigadores en la Universidad
+## Investigadores en internos y externos
 ```{r, echo=FALSE}
 authors_ucla_others <- 
   papers |> 
@@ -98,6 +80,46 @@ fig <- plot_ly(authors_ucla_others, x = ~ano,y = ~otra, type = 'bar',
 fig
 
 ```
+
+# Publicaciones Colombianas v.s Externas
+
+```{r}
+papers |> 
+  select(ano, pais_revista) |> #Seleccionar variables año y pais_revista
+  na.omit() |>
+  mutate(clasificacion = if_else(pais_revista == "Colombia", pais_revista, "Otro")) |> #Crear Variable clasificacion
+  select(ano, clasificacion) |> #ELimina la variable pais_revista 
+  group_by(ano, clasificacion) |> #Agrupa variable x año/clasificacion
+  count() |>  # Contalbilizar publicaciones x año/tipo
+  rename(cantidad = n) |>
+  ggplot(aes(x = ano, y = cantidad, color = clasificacion)) + 
+    geom_line() +
+          labs(title = "Publications", 
+              x = "years",
+              y = "Articles") +
+          theme(plot.title = element_text(hjust = 0.5)) 
+
+
+## Calidad de producción anual
+
+```{r, echo=FALSE}
+papers |> 
+  select(ano, SJR_Q) |> 
+  group_by(ano, SJR_Q) |> 
+  count() |> 
+  filter(SJR_Q != "-",
+         SJR_Q != "Sin categoria") |> 
+  arrange(ano) |> 
+  rename(total = n) |> 
+  ggplot(aes(x = factor(ano), y = total, fill = SJR_Q)) +
+  geom_bar(stat = "identity", 
+           position = "dodge") +
+  geom_text(aes(label = total), 
+            vjust = 1.5,
+            position = position_dodge(.9)) +
+  theme_bw()
+```
+
 
 # Red Social Académica
 
@@ -183,7 +205,7 @@ visNetwork(nodes = nodes,
 
 Solo profesores de la Luis Amigó
 
-```{r}
+```{r, echo=FALSE}
 nodes_luis <- 
   nodes |> 
   filter(universidad == "ucla")
