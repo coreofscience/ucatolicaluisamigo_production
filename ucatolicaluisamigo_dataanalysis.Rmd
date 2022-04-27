@@ -89,11 +89,17 @@ papers |>
   select(ano, SJR_Q) |> 
   group_by(ano, SJR_Q) |> 
   count() |> 
+  filter(SJR_Q != "-",
+         SJR_Q != "Sin categoria") |> 
   arrange(ano) |> 
   rename(total = n) |> 
   ggplot(aes(x = factor(ano), y = total, fill = SJR_Q)) +
   geom_bar(stat = "identity", 
-           position = "dodge")
+           position = "dodge") +
+  geom_text(aes(label = total), 
+            vjust = 1.5,
+            position = position_dodge(.9)) +
+  theme_bw()
 ```
 
 
