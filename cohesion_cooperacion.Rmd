@@ -61,3 +61,10 @@ cohesion |>
   theme_bw()
 ```
 
+```{python}
+cohesion_py = r.cohesion
+import matplotlib
+cohesion_py
+
+```
+
