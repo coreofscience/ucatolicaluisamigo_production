@@ -984,4 +984,125 @@ cooperacion <-
       geom_line() +
       geom_point() +
     theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "SISCO") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "NEUROCIENCIAS BASICAS Y APLICADAS") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "JURIDICAS Y SOCIALES") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "GORAS") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "FILOSOFIA Y TEOLOGIA CRITICA") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "FARMACODEPENDENCIA Y OTRAS ADICCIONES") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "FAMILIA DESARROLLO Y CALIDAD DE VIDA") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "ESTUDIOS DE FENOMENOS PSICOSOCIALES") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "EDUCACION, INFANCIA Y LENGUAS EXTRANJERAS") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "CONTAS") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "CALIDAD DE VIDA") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    
+    cooperacion |> 
+      filter(grupo == "AYELEN") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
 ```
