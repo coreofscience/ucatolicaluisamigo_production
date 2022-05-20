@@ -826,6 +826,115 @@ cohesion |>
   geom_line() +
   geom_point() +
   theme_bw()
+
+cohesion |> 
+  filter(grupo == "SISCO") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "NEUROCIENCIAS BASICAS Y APLICADAS") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "JURIDICAS Y SOCIALES") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "GORAS") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "FILOSOFIA Y TEOLOGIA CRITICA") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "FARMACODEPENDENCIA Y OTRAS ADICCIONES") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "FAMILIA DESARROLLO Y CALIDAD DE VIDA") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "ESTUDIOS DE FENOMENOS PSICOSOCIALES") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "EDUCACION, INFANCIA Y LENGUAS EXTRANJERAS") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "CONTAS") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "CALIDAD DE VIDA") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
+cohesion |> 
+  filter(grupo == "AYELEN") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+
 ```
 
 Indicador de cooperación
@@ -847,7 +956,7 @@ total_grupos <-
   rename(grupoRelacion = grupo.y )|>
   select(ano,grupoRelacion,grupo)|>
   group_by(ano,grupoRelacion,grupo)|>
-  filter(grupoRelacion != grupo)|>        
+  #filter(grupoRelacion != grupo)|>        
   group_by(ano,grupo)|>
   select(grupo,ano)|>
   count()|> 
@@ -856,4 +965,23 @@ total_grupos <-
 cooperacion <- 
     left_join(total_grupos, total_articulos)|>
         mutate(coop = grupos_relacion/total_articulos-1)
+
+#grupos <- c("URBANITAS", "GESNE")
+    cooperacion |> 
+      filter(grupo == "GESNE") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
+    
+    cooperacion |> 
+      filter(grupo == "URBANITAS") |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+    theme_bw()
 ```
