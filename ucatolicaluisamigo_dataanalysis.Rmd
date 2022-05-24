@@ -949,14 +949,14 @@ total_grupos <-
   left_join(researchers |> 
               select(integrantes, grupo),
               by = c("autores" = "integrantes")) |>
-  mutate(grupo.y = if_else(is.na(grupo.x), "GRUPO_EXTERNO", grupo.y))|>
+  mutate(grupo.y = if_else(is.na(grupo.y), "GRUPO_EXTERNO", grupo.y))|>
   separate_rows(grupo.y, sep = ";") |> 
   ungroup()|>
   rename(grupo = grupo.x )|>
   rename(grupoRelacion = grupo.y )|>
   select(ano,grupoRelacion,grupo)|>
   group_by(ano,grupoRelacion,grupo)|>
-  #filter(grupoRelacion != grupo)|>        
+  filter(grupoRelacion == grupo)|>        
   group_by(ano,grupo)|>
   select(grupo,ano)|>
   count()|> 
@@ -1106,3 +1106,37 @@ cooperacion <-
     theme_bw()
     
 ```
+
+```{r}
+library(ggplot2)
+library(ggversa)
+library(lubridate)
+library(tidyverse)
+
+cooperacion|> 
+barraA=ggplot(total_grupos, aes(grupo, fill=ano))
+barraA+geom_bar()+  
+  facet_wrap(~Survey_Site)+
+  labs(y="Frecuencia", x="Género y edad")+
+  theme(axis.title=element_text(size=10,face="bold"))
+```
+
+
+```{python}
+import numpy as np #Utilizado para listas o tuplas
+import pandas as pd #Los algoritmos de MachineLearning de BD
+import matplotlib as plt #Lo relacionado con graficas
+
+from sklearn.cluster import KMeans #Analisis de datos
+
+cohesion_py = r.cohesion
+cohesion_py_pd = pd.DataFrame(cohesion_py)
+datos = cohesion_py_pd.gt
+# paper1.info()
+# purpose = df.filter(['r.cohesion'])
+# purpose.head()
+# plt.hist(df['r.cohesion'])
+# plt.show()
+
+```
+
