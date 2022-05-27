@@ -1122,21 +1122,4 @@ barraA+geom_bar()+
 ```
 
 
-```{python}
-import numpy as np #Utilizado para listas o tuplas
-import pandas as pd #Los algoritmos de MachineLearning de BD
-import matplotlib as plt #Lo relacionado con graficas
-
-from sklearn.cluster import KMeans #Analisis de datos
-
-cohesion_py = r.cohesion
-cohesion_py_pd = pd.DataFrame(cohesion_py)
-datos = cohesion_py_pd.gt
-# paper1.info()
-# purpose = df.filter(['r.cohesion'])
-# purpose.head()
-# plt.hist(df['r.cohesion'])
-# plt.show()
-
-```
 
