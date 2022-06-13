@@ -1,0 +1,70 @@
+---
+title: "cohesion_cooperacion"
+author: "Sebastian Robledo"
+date: '2022-05-16'
+output: html_document
+---
+
+Indicador de cohesión
+
+cohesión = autores/productos - 1
+
+```{r}
+# productos de un grupo y tener en cuenta el año
+inv_ucla <- 
+  researchers |> 
+  select(integrantes) |> 
+  rename(autores = integrantes) 
+
+
+total_articulos <- 
+  papers |> 
+  select(ano, grupo) |> 
+  group_by(ano, grupo) |> 
+  count() |> 
+  rename(total_articulos = n)
+
+total_autores <- 
+  papers |> 
+  select(ano, grupo, autores) |> 
+  separate_rows(autores, sep = ", ") |> 
+  inner_join(inv_ucla) |> 
+  select(-autores) |> 
+  group_by(ano, grupo) |> 
+  count() |> 
+  rename(total_autores = n)
+
+cohesion <- 
+  total_articulos |> 
+  inner_join(total_autores) |> 
+  mutate(cohesion = total_autores/total_articulos - 1,
+         cohesion = round(cohesion, digits = 2))
+
+cohesion
+
+```
+
+
+Indicador de cooperación
+
+
+Gráfico de Cohesión vs cooperación a través del tiempo
+
+```{r}
+cohesion |> 
+  filter(grupo == "GESNE") |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  theme_bw()
+```
+
+```{python}
+cohesion_py = r.cohesion
+import matplotlib
+cohesion_py
+
+```
+

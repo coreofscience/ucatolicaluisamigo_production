@@ -773,3 +773,93 @@ roc_auc(researcher_bin_results,
         truth = articulos_bin, 
         .pred_high)
 ```
+Indicador de cohesión
+
+cohesión = autores/productos - 1
+```{r}
+inv_ucla <- 
+  researchers |> 
+  select(integrantes) |> 
+  rename(autores = integrantes) 
+
+total_articulos <- 
+  papers |> 
+  select(ano, grupo) |> 
+  group_by(ano, grupo) |> 
+  count() |> 
+  rename(total_articulos = n)
+
+total_autores <- 
+  papers |> 
+  select(ano, grupo, autores) |> 
+  separate_rows(autores, sep = ", ") |> 
+  inner_join(inv_ucla) |> 
+  select(-autores) |> 
+  group_by(ano, grupo) |> 
+  count() |> 
+  rename(total_autores = n)
+
+cohesion <- 
+  total_articulos |> 
+  inner_join(total_autores) |> 
+  mutate(cohesion = total_autores/total_articulos - 1,
+         cohesion = round(cohesion, digits = 2))
+
+```
+Gráfico Indicador de Cohesión a través del tiempo
+
+indicador = autores/productos - 1
+
+```{r}
+cohesion |> 
+  select(ano, cohesion) |> 
+  ungroup() |>
+  ggplot(aes(x = ano, y = cohesion)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~grupo)
+
+```
+
+Gráfico Indicador de Cooperación a través del tiempo
+
+cooperación = grupos_aliados/productos - 1
+
+```{r}
+total_grupos <- 
+  papers |> 
+  select(ano, grupo, autores) |> 
+  separate_rows(autores, sep = ", ") |> 
+  left_join(researchers |> 
+              select(integrantes, grupo),
+              by = c("autores" = "integrantes")) |>
+  mutate(grupo.y = if_else(is.na(grupo.y), "GRUPO_EXTERNO", grupo.y))|>
+  separate_rows(grupo.y, sep = ";") |> 
+  ungroup()|>
+  rename(grupo = grupo.x )|>
+  rename(grupoRelacion = grupo.y )|>
+  select(ano,grupoRelacion,grupo)|>
+  group_by(ano,grupoRelacion,grupo)|>
+  filter(grupoRelacion == grupo)|>        
+  group_by(ano,grupo)|>
+  select(grupo,ano)|>
+  count()|> 
+  rename(grupos_relacion = n)
+
+cooperacion <- 
+    left_join(total_grupos, total_articulos)|>
+        mutate(coop = grupos_relacion/total_articulos-1)
+    
+    cooperacion |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+      facet_wrap(~grupo)
+
+    
+```
+
+
+
