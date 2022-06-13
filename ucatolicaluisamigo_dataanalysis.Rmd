@@ -806,138 +806,22 @@ cohesion <-
          cohesion = round(cohesion, digits = 2))
 
 ```
-Gráfico de Cohesión vs cooperación a través del tiempo
+Gráfico Indicador de Cohesión a través del tiempo
+
+indicador = autores/productos - 1
 
 ```{r}
 cohesion |> 
-  filter(grupo == "GESNE") |> 
   select(ano, cohesion) |> 
   ungroup() |>
   ggplot(aes(x = ano, y = cohesion)) +
   geom_line() +
   geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "URBANITAS") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "SISCO") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "NEUROCIENCIAS BASICAS Y APLICADAS") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "JURIDICAS Y SOCIALES") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "GORAS") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "FILOSOFIA Y TEOLOGIA CRITICA") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "FARMACODEPENDENCIA Y OTRAS ADICCIONES") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "FAMILIA DESARROLLO Y CALIDAD DE VIDA") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "ESTUDIOS DE FENOMENOS PSICOSOCIALES") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "EDUCACION, INFANCIA Y LENGUAS EXTRANJERAS") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "CONTAS") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "CALIDAD DE VIDA") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
-
-cohesion |> 
-  filter(grupo == "AYELEN") |> 
-  select(ano, cohesion) |> 
-  ungroup() |>
-  ggplot(aes(x = ano, y = cohesion)) +
-  geom_line() +
-  geom_point() +
-  theme_bw()
+  facet_wrap(~grupo)
 
 ```
 
-Indicador de cooperación
+Gráfico Indicador de Cooperación a través del tiempo
 
 cooperación = grupos_aliados/productos - 1
 
@@ -965,160 +849,16 @@ total_grupos <-
 cooperacion <- 
     left_join(total_grupos, total_articulos)|>
         mutate(coop = grupos_relacion/total_articulos-1)
+    
+    cooperacion |> 
+      select(ano, coop) |> 
+      ungroup() |>
+      ggplot(aes(x = ano, y = coop)) +
+      geom_line() +
+      geom_point() +
+      facet_wrap(~grupo)
 
-#grupos <- c("URBANITAS", "GESNE")
-    cooperacion |> 
-      filter(grupo == "GESNE") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
     
-    cooperacion |> 
-      filter(grupo == "URBANITAS") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "SISCO") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "NEUROCIENCIAS BASICAS Y APLICADAS") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "JURIDICAS Y SOCIALES") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "GORAS") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "FILOSOFIA Y TEOLOGIA CRITICA") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "FARMACODEPENDENCIA Y OTRAS ADICCIONES") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "FAMILIA DESARROLLO Y CALIDAD DE VIDA") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "ESTUDIOS DE FENOMENOS PSICOSOCIALES") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "EDUCACION, INFANCIA Y LENGUAS EXTRANJERAS") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "CONTAS") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "CALIDAD DE VIDA") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-    
-    cooperacion |> 
-      filter(grupo == "AYELEN") |> 
-      select(ano, coop) |> 
-      ungroup() |>
-      ggplot(aes(x = ano, y = coop)) +
-      geom_line() +
-      geom_point() +
-    theme_bw()
-    
-```
-
-```{r}
-library(ggplot2)
-library(ggversa)
-library(lubridate)
-library(tidyverse)
-
-cooperacion|> 
-barraA=ggplot(total_grupos, aes(grupo, fill=ano))
-barraA+geom_bar()+  
-  facet_wrap(~Survey_Site)+
-  labs(y="Frecuencia", x="Género y edad")+
-  theme(axis.title=element_text(size=10,face="bold"))
 ```
 
 
