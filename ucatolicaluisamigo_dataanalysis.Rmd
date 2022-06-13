@@ -32,6 +32,7 @@ library(bestNormalize)
 library(performance)
 library(report)
 library(plotly)
+library(lubridate)
 ```
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
@@ -861,5 +862,79 @@ cooperacion <-
     
 ```
 
+# Análisis de clusterización
+
+```{r}
+researchers_cluster <- 
+  researchers |> 
+  select(integrantes,
+         inicio_vinculacion, 
+         posgrade, 
+         clasification, 
+         h_index, 
+         articulos, 
+         libros, 
+         softwares, 
+         innovaciones, 
+         trabajos_dirigidos) 
+
+researchers_articulos <- 
+  researchers_cluster |>
+  separate_rows(articulos, sep = "; ") |> 
+  group_by(integrantes) |>
+  mutate(articulos = as.numeric(articulos)) |> 
+  summarise(articulos_total = sum(articulos))
+
+researchers_libros <- 
+  researchers_cluster |> 
+  separate_rows(libros, sep = "; ") |> 
+  group_by(integrantes) |>
+  mutate(libros = as.numeric(libros)) |> 
+  summarise(libros_total = sum(libros))
+
+researchers_softwares <- 
+  researchers_cluster |> 
+  separate_rows(softwares, sep = "; ") |> 
+  group_by(integrantes) |>
+  mutate(softwares = as.numeric(softwares)) |> 
+  summarise(softwares_total = sum(softwares))
+
+researchers_innovaciones <- 
+  researchers_cluster |> 
+  separate_rows(innovaciones, sep = "; ") |> 
+  group_by(integrantes) |>
+  mutate(innovaciones = as.numeric(innovaciones)) |> 
+  summarise(innovaciones_total = sum(innovaciones))
+
+researchers_trab_dirigidos <- 
+  researchers_cluster |> 
+  separate_rows(trabajos_dirigidos, sep = "; ") |> 
+  group_by(integrantes) |>
+  mutate(trabajos_dirigidos = as.numeric(trabajos_dirigidos)) |> 
+  summarise(trabajos_dirigidos = sum(trabajos_dirigidos))
+
+researchers_vinculacion <- 
+  researchers_cluster |> 
+  select(integrantes, inicio_vinculacion) |> 
+  separate_rows(inicio_vinculacion, sep = "; ") |> 
+  mutate(inicio_vinculacion = ymd(inicio_vinculacion)) |> 
+  group_by(integrantes) |>
+  filter(inicio_vinculacion == min(inicio_vinculacion)) |> 
+  mutate(tiempo_vinculado = today() - inicio_vinculacion) |> 
+  select(-inicio_vinculacion)
+
+researchers_cluster_cleaned <- 
+  researchers_cluster |> 
+  select(integrantes, 
+         posgrade, 
+         clasification, 
+         h_index) |> 
+  left_join(researchers_articulos) |> 
+  left_join(researchers_libros) |> 
+  left_join(researchers_softwares) |> 
+  left_join(researchers_innovaciones) |> 
+  left_join(researchers_trab_dirigidos) |> 
+  left_join(researchers_vinculacion)
+```
 
 
